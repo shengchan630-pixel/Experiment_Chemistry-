@@ -1,0 +1,6 @@
+{
+  "name": "화학실험 비커",
+  "description": "화학실험을 위한 인터랙티브 실험실 비커 시뮬레이터",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
