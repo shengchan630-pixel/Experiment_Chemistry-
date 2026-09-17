@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
 import { ElementData, CATEGORY_LABELS } from '../data/periodicTable';
-import { Atom, Sparkles, Layers, Box } from 'lucide-react';
+import { Atom, Sparkles, Layers, Box, Maximize2, Play, Pause } from 'lucide-react';
 
 interface ElementVisualsProps {
   element: ElementData;
   initialTab?: 'all' | 'sample' | 'bohr' | 'shells';
+  size?: 'normal' | 'large';
+  layout?: 'auto' | 'stacked' | 'grid';
+  onExpand?: () => void;
 }
 
 // Shell labels and color accents
 const SHELL_NAMES = ['K (n=1)', 'L (n=2)', 'M (n=3)', 'N (n=4)'];
 const SHELL_COLORS = ['#38bdf8', '#818cf8', '#c084fc', '#f472b6'];
 
-export default function ElementVisuals({ element, initialTab = 'all' }: ElementVisualsProps) {
+export default function ElementVisuals({
+  element,
+  initialTab = 'all',
+  size = 'normal',
+  layout = 'auto',
+  onExpand,
+}: ElementVisualsProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'sample' | 'bohr' | 'shells'>(initialTab);
   const [isRotating, setIsRotating] = useState<boolean>(true);
 
@@ -19,66 +28,82 @@ export default function ElementVisuals({ element, initialTab = 'all' }: ElementV
   const shells = getElementShells(element.atomicNumber);
   const totalElectrons = shells.reduce((a, b) => a + b, 0);
   const neutrons = Math.round(element.atomicWeight) - element.atomicNumber;
+  const isLarge = size === 'large';
+  const isGridLayout = layout === 'grid' || (layout === 'auto' && isLarge);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col">
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col w-full">
       {/* Top View Mode Tabs */}
-      <div className="flex items-center border-b border-slate-100 bg-slate-50/70 p-1 gap-1 text-[11px] overflow-x-auto">
-        <button
-          type="button"
-          onClick={() => setActiveTab('all')}
-          className={`py-1.5 px-2 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
-            activeTab === 'all'
-              ? 'bg-slate-900 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 bg-white/60'
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>모두 보기 (3종)</span>
-        </button>
+      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 p-1.5 gap-1 text-[11px]">
+        <div className="flex items-center gap-1 overflow-x-auto flex-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab('all')}
+            className={`py-1.5 px-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
+              activeTab === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 bg-white/70 border border-slate-200/50'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>모두 보기 (3종)</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('sample')}
-          className={`flex-1 py-1.5 px-2 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
-            activeTab === 'sample'
-              ? 'bg-white text-slate-800 shadow-xs border border-slate-200/70'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Box className="w-3.5 h-3.5 text-amber-500" />
-          <span>실물 외형</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('sample')}
+            className={`py-1.5 px-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
+              activeTab === 'sample'
+                ? 'bg-white text-slate-800 shadow-xs border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Box className="w-3.5 h-3.5 text-amber-500" />
+            <span>실물 외형</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('bohr')}
-          className={`flex-1 py-1.5 px-2 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
-            activeTab === 'bohr'
-              ? 'bg-white text-slate-800 shadow-xs border border-slate-200/70'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Atom className="w-3.5 h-3.5 text-sky-500" />
-          <span>보어 원자모형</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('bohr')}
+            className={`py-1.5 px-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
+              activeTab === 'bohr'
+                ? 'bg-white text-slate-800 shadow-xs border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Atom className="w-3.5 h-3.5 text-sky-500" />
+            <span>보어 원자모형</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('shells')}
-          className={`flex-1 py-1.5 px-2 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
-            activeTab === 'shells'
-              ? 'bg-white text-slate-800 shadow-xs border border-slate-200/70'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5 text-indigo-500" />
-          <span>전자껍질</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('shells')}
+            className={`py-1.5 px-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1 shrink-0 ${
+              activeTab === 'shells'
+                ? 'bg-white text-slate-800 shadow-xs border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-indigo-500" />
+            <span>전자껍질</span>
+          </button>
+        </div>
+
+        {onExpand && (
+          <button
+            type="button"
+            onClick={onExpand}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] transition shrink-0"
+            title="대화면 스튜디오로 확대 보기"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span>확대 보기</span>
+          </button>
+        )}
       </div>
 
       {/* Visual Canvas Area */}
-      <div className="relative p-3 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-white flex flex-col items-center justify-center overflow-hidden select-none">
+      <div className={`relative ${isLarge ? 'p-5' : 'p-3'} bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-white flex flex-col items-center justify-center select-none w-full overflow-hidden`}>
         {/* Subtle grid background */}
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
@@ -89,66 +114,164 @@ export default function ElementVisuals({ element, initialTab = 'all' }: ElementV
         />
 
         {activeTab === 'all' && (
-          <div className="w-full flex flex-col gap-4 animate-in fade-in duration-200">
-            {/* 1. Real Sample Appearance */}
-            <div className="flex flex-col items-center border-b border-slate-800/80 pb-3">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 mb-1">
-                <Box className="w-3.5 h-3.5" />
-                <span>1. 실물 외형 및 물리적 상태</span>
+          isGridLayout ? (
+            /* 3-Column Spacious Grid Layout */
+            <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-4 animate-in fade-in duration-200">
+              {/* 1. Real Sample Appearance */}
+              <div className="bg-slate-900/80 rounded-2xl border border-slate-800 p-4 flex flex-col items-center justify-between min-h-[360px] shadow-lg">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-400 mb-2 pb-2 border-b border-slate-800/80 w-full justify-center">
+                  <Box className="w-4 h-4" />
+                  <span>1. 실물 외형 및 물리적 상태</span>
+                </div>
+                <div className="flex-1 flex items-center justify-center w-full">
+                  <SampleShapeView element={element} size={size} />
+                </div>
               </div>
-              <SampleShapeView element={element} />
-            </div>
 
-            {/* 2. Bohr Atomic Model */}
-            <div className="flex flex-col items-center border-b border-slate-800/80 pb-3">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400 mb-1">
-                <Atom className="w-3.5 h-3.5" />
-                <span>2. 보어 원자 모형 (전자 궤도 공전)</span>
+              {/* 2. Bohr Atomic Model */}
+              <div className="bg-slate-900/80 rounded-2xl border border-slate-800 p-4 flex flex-col items-center justify-between min-h-[360px] shadow-lg">
+                <div className="flex items-center justify-between text-xs font-bold text-sky-400 mb-2 pb-2 border-b border-slate-800/80 w-full">
+                  <div className="flex items-center gap-2">
+                    <Atom className="w-4 h-4" />
+                    <span>2. 보어 원자 모형 (전자 궤도)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsRotating(!isRotating)}
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-normal flex items-center gap-1 transition"
+                  >
+                    {isRotating ? <Pause className="w-2.5 h-2.5 text-amber-400" /> : <Play className="w-2.5 h-2.5 text-emerald-400" />}
+                    <span>{isRotating ? '정지' : '회전'}</span>
+                  </button>
+                </div>
+                <div className="flex-1 flex items-center justify-center w-full">
+                  <BohrAtomModelView
+                    element={element}
+                    shells={shells}
+                    neutrons={neutrons}
+                    isRotating={isRotating}
+                    onToggleRotate={() => setIsRotating(!isRotating)}
+                    size={size}
+                  />
+                </div>
               </div>
-              <BohrAtomModelView
-                element={element}
-                shells={shells}
-                neutrons={neutrons}
-                isRotating={isRotating}
-                onToggleRotate={() => setIsRotating(!isRotating)}
-              />
-            </div>
 
-            {/* 3. Electron Shells Breakdown */}
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 mb-1">
-                <Layers className="w-3.5 h-3.5" />
-                <span>3. 전자 껍질 (K, L, M, N & 원자가 전자)</span>
+              {/* 3. Electron Shells Breakdown */}
+              <div className="bg-slate-900/80 rounded-2xl border border-slate-800 p-4 flex flex-col items-center justify-between min-h-[360px] shadow-lg">
+                <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 mb-2 pb-2 border-b border-slate-800/80 w-full justify-center">
+                  <Layers className="w-4 h-4" />
+                  <span>3. 전자 껍질 (K, L, M, N)</span>
+                </div>
+                <div className="flex-1 flex items-center justify-center w-full">
+                  <ShellsBreakdownView
+                    element={element}
+                    shells={shells}
+                    totalElectrons={totalElectrons}
+                    size={size}
+                  />
+                </div>
               </div>
-              <ShellsBreakdownView
-                element={element}
-                shells={shells}
-                totalElectrons={totalElectrons}
-              />
             </div>
-          </div>
+          ) : (
+            /* Unified 3-in-1 Compact Dashboard: Fits completely on screen without vertical overflow */
+            <div className="w-full flex flex-col gap-2.5 animate-in fade-in duration-200">
+              {/* Top Row: 실물 외형 & 보어 원자모형 side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
+                {/* 1. Real Sample Appearance */}
+                <div className="bg-slate-900/90 rounded-xl border border-slate-800/90 p-2.5 flex flex-col items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-400 mb-1 w-full justify-between pb-1 border-b border-slate-800/80">
+                    <div className="flex items-center gap-1">
+                      <Box className="w-3.5 h-3.5 text-amber-400" />
+                      <span>1. 실물 외형</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {getPhysicalSampleInfo(element.atomicNumber).crystal}
+                    </span>
+                  </div>
+                  <div className="py-1 flex items-center justify-center w-full min-h-[135px]">
+                    <SampleShapeView element={element} size="compact" />
+                  </div>
+                </div>
+
+                {/* 2. Bohr Atomic Model */}
+                <div className="bg-slate-900/90 rounded-xl border border-slate-800/90 p-2.5 flex flex-col items-center justify-between shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-sky-400 mb-1 w-full pb-1 border-b border-slate-800/80">
+                    <div className="flex items-center gap-1">
+                      <Atom className="w-3.5 h-3.5 text-sky-400" />
+                      <span>2. 보어 원자 모형</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsRotating(!isRotating)}
+                      className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-normal flex items-center gap-0.5 transition"
+                    >
+                      {isRotating ? <Pause className="w-2 h-2 text-amber-400" /> : <Play className="w-2 h-2 text-emerald-400" />}
+                      <span>{isRotating ? '정지' : '회전'}</span>
+                    </button>
+                  </div>
+                  <div className="py-1 flex items-center justify-center w-full min-h-[135px]">
+                    <BohrAtomModelView
+                      element={element}
+                      shells={shells}
+                      neutrons={neutrons}
+                      isRotating={isRotating}
+                      onToggleRotate={() => setIsRotating(!isRotating)}
+                      size="compact"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Row: 3. Electron Shells Breakdown */}
+              <div className="bg-slate-900/90 rounded-xl border border-slate-800/90 p-2.5 flex flex-col shadow-xs w-full">
+                <div className="flex items-center justify-between text-[11px] font-bold text-indigo-400 mb-1.5 pb-1 border-b border-slate-800/80 w-full">
+                  <div className="flex items-center gap-1">
+                    <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>3. 전자 껍질 에너지 준위 (K, L, M, N 껍질 배치)</span>
+                  </div>
+                  <span className="font-mono text-[10px] text-cyan-400 font-semibold">
+                    {element.electronConfig}
+                  </span>
+                </div>
+                <ShellsBreakdownView
+                  element={element}
+                  shells={shells}
+                  totalElectrons={totalElectrons}
+                  size="compact"
+                />
+              </div>
+            </div>
+          )
         )}
 
         {activeTab === 'sample' && (
-          <SampleShapeView element={element} />
+          <div className="py-2 w-full flex flex-col items-center">
+            <SampleShapeView element={element} size={size} />
+          </div>
         )}
 
         {activeTab === 'bohr' && (
-          <BohrAtomModelView
-            element={element}
-            shells={shells}
-            neutrons={neutrons}
-            isRotating={isRotating}
-            onToggleRotate={() => setIsRotating(!isRotating)}
-          />
+          <div className="py-2 w-full flex flex-col items-center">
+            <BohrAtomModelView
+              element={element}
+              shells={shells}
+              neutrons={neutrons}
+              isRotating={isRotating}
+              onToggleRotate={() => setIsRotating(!isRotating)}
+              size={size}
+            />
+          </div>
         )}
 
         {activeTab === 'shells' && (
-          <ShellsBreakdownView
-            element={element}
-            shells={shells}
-            totalElectrons={totalElectrons}
-          />
+          <div className="py-2 w-full flex flex-col items-center">
+            <ShellsBreakdownView
+              element={element}
+              shells={shells}
+              totalElectrons={totalElectrons}
+              size={size}
+            />
+          </div>
         )}
       </div>
 
@@ -180,16 +303,36 @@ export default function ElementVisuals({ element, initialTab = 'all' }: ElementV
 // ==========================================
 // 1. Physical Specimen Shape View (실물 외형)
 // ==========================================
-export function SampleShapeView({ element }: { element: ElementData }) {
+export function SampleShapeView({
+  element,
+  size = 'normal',
+}: {
+  element: ElementData;
+  size?: 'compact' | 'normal' | 'large';
+}) {
   const info = getPhysicalSampleInfo(element.atomicNumber);
+  const isLarge = size === 'large';
+  const isCompact = size === 'compact';
+
+  const containerSizeClass = isLarge
+    ? 'w-64 h-52 sm:w-80 sm:h-64'
+    : isCompact
+    ? 'w-36 h-28 sm:w-44 sm:h-32'
+    : 'w-52 h-40';
+
+  const glowSizeClass = isLarge
+    ? 'w-44 h-44 blur-3xl'
+    : isCompact
+    ? 'w-20 h-20 blur-xl'
+    : 'w-28 h-28 blur-2xl';
 
   return (
     <div className="relative z-10 flex flex-col items-center justify-center w-full animate-in fade-in duration-200">
       {/* Specimen SVG Rendering Container */}
-      <div className="relative w-44 h-36 flex items-center justify-center">
+      <div className={`relative ${containerSizeClass} flex items-center justify-center`}>
         {/* Glow backdrop based on element character */}
         <div
-          className="absolute w-28 h-28 rounded-full blur-2xl opacity-40 pointer-events-none"
+          className={`absolute ${glowSizeClass} rounded-full opacity-40 pointer-events-none`}
           style={{ backgroundColor: info.glowColor }}
         />
 
@@ -480,6 +623,7 @@ interface BohrProps {
   neutrons: number;
   isRotating: boolean;
   onToggleRotate: () => void;
+  size?: 'compact' | 'normal' | 'large';
 }
 
 export function BohrAtomModelView({
@@ -488,19 +632,31 @@ export function BohrAtomModelView({
   neutrons,
   isRotating,
   onToggleRotate,
+  size = 'normal',
 }: BohrProps) {
+  const isLarge = size === 'large';
+  const isCompact = size === 'compact';
   // Shell radii mapping
-  const baseRadius = 26;
-  const shellGap = 16;
+  const baseRadius = isLarge ? 28 : isCompact ? 22 : 25;
+  const shellGap = isLarge ? 18 : isCompact ? 14 : 16;
   const shellRadii = shells.map((_, idx) => baseRadius + idx * shellGap);
-  const maxRadius = shellRadii[shellRadii.length - 1] + 10;
+
+  const containerSizeClass = isLarge
+    ? 'w-64 h-64 sm:w-72 sm:h-72'
+    : isCompact
+    ? 'w-36 h-36 sm:w-40 sm:h-40'
+    : 'w-52 h-52';
 
   return (
     <div className="relative z-10 flex flex-col items-center justify-center w-full animate-in fade-in duration-200">
-      {/* SVG Canvas */}
-      <div className="relative w-52 h-44 flex items-center justify-center cursor-pointer" onClick={onToggleRotate}>
+      {/* SVG Canvas - Perfect Square container prevents vertical squishing */}
+      <div
+        className={`relative ${containerSizeClass} flex items-center justify-center cursor-pointer`}
+        onClick={onToggleRotate}
+        title="클릭하여 공전 회전을 일시정지하거나 재생합니다"
+      >
         <svg
-          viewBox="-110 -110 220 220"
+          viewBox="-115 -115 230 230"
           className="w-full h-full overflow-visible"
         >
           <defs>
@@ -624,15 +780,52 @@ export function ShellsBreakdownView({
   element,
   shells,
   totalElectrons,
+  size = 'normal',
 }: {
   element: ElementData;
   shells: number[];
   totalElectrons: number;
+  size?: 'compact' | 'normal' | 'large';
 }) {
+  const isLarge = size === 'large';
+  const isCompact = size === 'compact';
   const maxCapacities = [2, 8, 18, 32];
 
+  if (isCompact) {
+    return (
+      <div className="relative z-10 w-full flex flex-col gap-1 animate-in fade-in duration-200">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 w-full">
+          {shells.map((count, idx) => {
+            const cap = maxCapacities[idx];
+            const pct = Math.min(100, Math.round((count / cap) * 100));
+            const color = SHELL_COLORS[idx];
+            const isFull = count === cap;
+
+            return (
+              <div key={idx} className="bg-slate-950/70 p-1.5 rounded-lg border border-slate-800/80 flex flex-col gap-0.5">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="font-bold flex items-center gap-1" style={{ color }}>
+                    <span>{SHELL_NAMES[idx].split(' ')[0]}</span>
+                    {isFull && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="가득참" />}
+                  </span>
+                  <span className="font-mono text-slate-300 font-semibold">{count}e⁻</span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%`, backgroundColor: color }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative z-10 w-full max-w-sm flex flex-col gap-2 p-1 animate-in fade-in duration-200">
+    <div className={`relative z-10 w-full ${isLarge ? 'max-w-md p-3' : 'max-w-sm p-1'} flex flex-col gap-2.5 animate-in fade-in duration-200`}>
       <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-800">
         <span className="font-semibold text-slate-300">전자 배치 상세 (Aufbau Principle)</span>
         <span className="font-mono text-cyan-400 text-[11px] font-bold">
